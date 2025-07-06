@@ -32,9 +32,13 @@ class ViewContactController extends Controller
                 'Test',
             ]
         ];
-
-        return Inertia::render('contact', [
-            'companyInfo' => $companyInfo
+        $messages = [];
+        if ($request->user() && $request->user()->hasPermission('dashboard.messages')) {
+            $messages = \App\Models\Contact::orderByDesc('created_at')->get();
+        }
+        return Inertia::render('dashboard/contact-messages', [
+            'companyInfo' => $companyInfo,
+            'messages' => $messages,
         ]);
     }
 

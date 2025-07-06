@@ -15,26 +15,43 @@ interface Car {
   vin: string
 }
 
+interface Location {
+  id: number;
+  name: string;
+}
+
+interface LocationGroup {
+  id: number;
+  name: string;
+  locations: Location[];
+}
+
 interface Appointment {
-  id: number
-  description: string
-  estimated_date: string | null
-  status: string
-  car: Car
-  rejected_description?: string
+  id: number;
+  description: string;
+  estimated_date: string | null;
+  status: string;
+  car: Car;
+  location?: Location | null;
+  updated_at: Date | null;
+  attachment_path?: string | null;
+  rejected_description?: string;
 }
 
 interface CreateAppointmentProps extends SharedData {
-  cars: Car[]
-  appointments: Appointment[]
+  cars: Car[];
+  appointments: Appointment[];
+  locations: Location[];
+  locationGroups: LocationGroup[];
 }
 
 function CreateAppointment() {
-  const { cars, appointments } = usePage<CreateAppointmentProps>().props
+  const { cars, appointments, locations, locationGroups } = usePage<CreateAppointmentProps>().props;
   const [showAddCarModal, setShowAddCarModal] = useState(false)
   const [showCreateAppointmentForm, setShowCreateAppointmentForm] = useState(false)
   const [showAppointments, setShowAppointments] = useState(true)
   const [showMoreInfo, setShowMoreInfo] = useState<number | null>(null)
+  const [selectedGroupId, setSelectedGroupId] = useState<string>('')
 
   const handleSeeAppointments = () => {
     setShowAppointments(true)
@@ -50,6 +67,7 @@ function CreateAppointment() {
     description: '',
     cars_id: '',
     estimated_date: '',
+    location_id: '',
   })
 
   const { data: carData, setData: setCarData, post: postCar, processing: carProcessing, errors: carErrors, reset: resetCar } = useForm({
@@ -136,6 +154,40 @@ function CreateAppointment() {
                   </select>
                   {errors.cars_id && <p className="text-red-500 text-sm mt-1">{errors.cars_id}</p>}
                 </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Select Town *</label>
+                  <select
+                    value={selectedGroupId}
+                    onChange={e => {
+                      setSelectedGroupId(e.target.value);
+                      setData('location_id', '');
+                    }}
+                    className="w-full border rounded px-3 py-2"
+                    required
+                  >
+                    <option value="">Choose a group...</option>
+                    {locationGroups.map(group => (
+                      <option key={group.id} value={group.id}>{group.name}</option>
+                    ))}
+                  </select>
+                </div>
+                {selectedGroupId && (
+                  <div>
+                    <label className="block text-sm font-medium mb-2">Select Location *</label>
+                    <select
+                      value={data.location_id}
+                      onChange={e => setData('location_id', e.target.value)}
+                      className="w-full border rounded px-3 py-2"
+                      required
+                    >
+                      <option value="">Choose a location...</option>
+                      {locationGroups.find(g => g.id.toString() === selectedGroupId)?.locations.map(loc => (
+                        <option key={loc.id} value={loc.id}>{loc.name}</option>
+                      ))}
+                    </select>
+                    {errors.location_id && <p className="text-red-500 text-sm mt-1">{errors.location_id}</p>}
+                  </div>
+                )}
 
                 <div>
                   <label className="block text-sm font-medium mb-2">Description *</label>
@@ -186,6 +238,7 @@ function CreateAppointment() {
                         <th className="border border-gray-300 p-3 text-left">Description</th>
                         <th className="border border-gray-300 p-3 text-left">Estimated Date</th>
                         <th className="border border-gray-300 p-3 text-left">Status</th>
+                        <th className="border border-gray-300 p-3 text-left">Location</th>
                         <th className="border border-gray-300 p-3 text-left">Actions</th>
                       </tr>
                     </thead>
@@ -211,6 +264,9 @@ function CreateAppointment() {
                             </span>
                           </td>
                           <td className="border border-gray-300 p-3">
+                            {appointment.location ? appointment.location.name : 'N/A'}
+                          </td>
+                          <td className="border border-gray-300 p-3">
                             <Button
                               variant="outline"
                               className="text-blue-500 hover:text-blue-700"
@@ -218,20 +274,6 @@ function CreateAppointment() {
                             >
                               More information
                             </Button>
-                            {showMoreInfo === appointment.id && (
-                              <div className="mt-2 p-4 bg-gray-50 border rounded shadow">
-                                <div className="flex justify-between items-center mb-2">
-                                  <span className="font-bold">Description:</span>
-                                  <Button size="icon" variant="ghost" onClick={() => setShowMoreInfo(null)}><X className="w-4 h-4" /></Button>
-                                </div>
-                                <div className="mb-2">{appointment.description}</div>
-                                {appointment.status === 'REJECTED' && appointment.rejected_description && (
-                                  <div className="mb-2 text-red-600">
-                                    <span className="font-bold">Rejected reason:</span> {appointment.rejected_description}
-                                  </div>
-                                )}
-                              </div>
-                            )}
                           </td>
                         </tr>
                       ))}
@@ -242,11 +284,51 @@ function CreateAppointment() {
                 <p className="text-gray-500">No appointments found. Create your first appointment above!</p>
               )}
             </div>
-
+          )}
+          {showMoreInfo !== null && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/20">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-lg w-full mx-4 relative">
+                <div className="flex justify-between items-center mb-4">
+                  <h3 className="text-lg font-bold">Appointment Details</h3>
+                  <Button
+                    onClick={() => setShowMoreInfo(null)}
+                    variant="outline"
+                    className="text-red-500"
+                  >
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
+                {(() => {
+                  const appointment = appointments.find(a => a.id === showMoreInfo);
+                  if (!appointment) return null;
+                  return (
+                    <div className="space-y-2">
+                      <div><span className="font-semibold">Car:</span> {appointment.car.brand} {appointment.car.model} ({appointment.car.year})</div>
+                      <div><span className="font-semibold">VIN:</span> {appointment.car.vin}</div>
+                      <div><span className="font-semibold">License Plate:</span> {appointment.car.license_plate}</div>
+                      <div><span className="font-semibold">Color:</span> {appointment.car.color}</div>
+                      <div><span className="font-semibold">Description:</span> {appointment.description}</div>
+                      <div><span className="font-semibold">Finish date:</span> {appointment.updated_at ? new Date(appointment.updated_at).toLocaleDateString() : 'Not set'}</div>
+                      <div><span className="font-semibold">Status:</span> {appointment.status}</div>
+                      <div><span className="font-semibold">Location:</span> {appointment.location ? appointment.location.name : 'N/A'}</div>
+                      {appointment.status === 'REJECTED' && appointment.rejected_description && (
+                        <div className="text-red-600"><span className="font-semibold">Rejected reason:</span> {appointment.rejected_description}</div>
+                      )}
+                      {appointment.status === 'COMPLETED' && appointment.attachment_path && (
+                        <div className="text-green-700"><span className="font-semibold">Attachment Path:</span> {appointment.attachment_path}</div>
+                      )}
+                      <div className="mt-2 text-right">
+                        <Button onClick={() => setShowMoreInfo(null)} variant="outline">Close</Button>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </div>
+            </div>
           )}
           {showAddCarModal && (
-            <div className="fixed inset-0 flex items-center justify-center z-50">
-              <div className="bg-[#A9A9A9] bg-opacity-15 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+            <div className="fixed inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-black/20">
+              <div className="bg-white p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold">Add New Car</h3>
                   <Button

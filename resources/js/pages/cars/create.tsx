@@ -13,7 +13,6 @@ function CreateCarPage() {
     license_plate: '',
     vin: '',
   })
-  // Use new toast system: read success/error directly from page.props (not flash)
   const { success, error } = usePage().props as { success?: string; error?: string }
   const { showToast } = useToast()
 

@@ -22,6 +22,7 @@ class User extends Authenticatable
         'fname',
         'email',
         'password',
+        'role_id',
     ];
 
     /**
@@ -61,5 +62,29 @@ class User extends Authenticatable
     public function appointments()
     {
         return $this->hasManyThrough(Appointments::class, Cars::class);
+    }
+
+    public function role()
+    {
+        return $this->belongsTo(Role::class, 'role_id');
+    }
+
+    public function permissions()
+    {
+        if ($this->role && $this->role->name === 'admin') {
+            return \App\Models\Permission::all();
+        }
+        if ($this->role) {
+            return $this->role->permissions;
+        }
+        return collect();
+    }
+
+    public function hasPermission($permissionName)
+    {
+        if ($this->role && $this->role->name === 'admin') {
+            return true;
+        }
+        return $this->permissions()->where('name', $permissionName)->isNotEmpty();
     }
 }

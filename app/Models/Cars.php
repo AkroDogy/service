@@ -16,17 +16,10 @@ class Cars extends Model
         'vin',
     ];
 
-    /**
-     * Get the user that owns the car.
-     */
     public function user()
     {
         return $this->belongsTo(User::class);
     }
-
-    /**
-     * Get the appointments for the car.
-     */
     public function appointments()
     {
         return $this->hasMany(Appointments::class, 'cars_id');

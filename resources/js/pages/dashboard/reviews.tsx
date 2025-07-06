@@ -16,7 +16,14 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function DashboardReviews() {
-  const reviews = usePage<SharedData>().props.reviews;
+  const { auth, reviews } = usePage().props as any;
+  const userPermissions: string[] = auth?.user?.permissions || [];
+  const userRoles: string[] = (auth?.user?.roles || []).map((r: string) => r.toLowerCase());
+  const isSuperAdmin = userRoles.includes('admin') || userPermissions.includes('dashboard.administrator');
+  const hasPermission = (perm: string) => isSuperAdmin || userPermissions.includes(perm);
+  if (!hasPermission('dashboard.reviews')) {
+    return <div className="p-8 text-center text-red-500">You do not have permission to view this page.</div>;
+  }
 
   return (
     <AppLayout breadcrumbs={breadcrumbs}>
@@ -38,7 +45,7 @@ export default function DashboardReviews() {
               </tr>
             </thead>
             <tbody>
-              {reviews.map((review) => (
+              {reviews.map((review: any) => (
                 <tr key={review.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
                     {review.fname} {review.lname}

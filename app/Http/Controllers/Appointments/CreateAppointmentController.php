@@ -19,11 +19,15 @@ class CreateAppointmentController extends Controller
             return redirect()->route('login')->with('error', 'You must be logged in to create an appointment');
         }
         $cars = $user->cars()->get();
-        $appointments = $user->appointments()->with('car')->get();
+        $appointments = $user->appointments()->with(['car', 'location'])->get();
+        $locations = \App\Models\Location::all();
+        $locationGroups = \App\Models\LocationGroup::with('locations')->get();
 
         return Inertia::render('appointments/create', [
             'cars' => $cars,
             'appointments' => $appointments,
+            'locations' => $locations,
+            'locationGroups' => $locationGroups,
         ]);
     }
 
@@ -38,6 +42,7 @@ class CreateAppointmentController extends Controller
             'description' => 'required|string|max:1000',
             'cars_id' => 'required|exists:cars,id',
             'estimated_date' => 'nullable|date|after:today',
+            'location_id' => 'required|exists:locations,id',
         ]);
         $car = $user->cars()->find($validated['cars_id']);
         if (!$car) {
@@ -48,6 +53,7 @@ class CreateAppointmentController extends Controller
             'description' => $validated['description'],
             'estimated_date' => $validated['estimated_date'] ?? null,
             'status' => 'PENDING',
+            'location_id' => $validated['location_id'],
         ]);
 
         return redirect()->route('appointments.create')->with('success', 'Appointment created successfully!');

@@ -5,7 +5,7 @@ export interface User {
     id: number;
     fname: string;
     lname: string;
-    role: 'ADMIN' | 'USER' | 'WORKER';
+    role: string;
     email: string;
     email_verified_at: string | null;
     last_on: string;
@@ -101,6 +101,7 @@ export interface SharedData {
     cars: CarData;
     messages: Messages[];
     appointmentss: Appointment[];
+    locationGroups: { id: number }[];
     reviews: Reviews[];
     users: User[];
     ziggy: Config & { location: string };

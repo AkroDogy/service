@@ -12,7 +12,6 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->string('role')->default('USER')->after('email');
             $table->string('lname')->nullable();;
             $table->string('fname')->nullable();;
             $table->dropColumn('name');

@@ -1,7 +1,7 @@
 import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { usePage } from '@inertiajs/react';
+import { usePage, router } from '@inertiajs/react';
 import { type SharedData } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -16,7 +16,15 @@ const breadcrumbs: BreadcrumbItem[] = [
 ];
 
 export default function DashboardUser() {
-    const users = usePage<SharedData>().props.users;
+    const { users, roles, auth } = usePage().props as any;
+    const userPermissions: string[] = auth?.user?.permissions || [];
+    if (!userPermissions.includes('dashboard.users')) {
+        return <div className="p-8 text-center text-red-500">You do not have permission to view this page.</div>;
+    }
+
+    const handleRoleChange = (userId: number, roleId: number) => {
+        router.post(`/dashboard/users/${userId}/role`, { role_id: roleId });
+    };
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -38,7 +46,7 @@ export default function DashboardUser() {
                             </tr>
                         </thead>
                         <tbody>
-                            {users.map((user) => (
+                            {users.map((user: any) => (
                                 <tr key={user.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
                                         {user.fname} {user.lname}
@@ -47,17 +55,24 @@ export default function DashboardUser() {
                                         {user.email}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        <span
-                                            className={`px-2 py-1 text-xs font-medium rounded-full 
-                                                ${user.role === 'ADMIN'
-                                                    ? 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
-                                                    : user.role === 'WORKER'
-                                                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100'
-                                                        : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100'
-                                                }`}
-                                        >
-                                            {user.role}
-                                        </span>
+                                        {userPermissions.includes('dashboard.users.modify.rank') ? (
+                                            user.role?.name === 'admin' ? (
+                                                <span>{user.role?.name}</span>
+                                            ) : (
+                                                <select
+                                                    value={user.role?.id || ''}
+                                                    onChange={e => handleRoleChange(user.id, Number(e.target.value))}
+                                                    className="border rounded px-2 py-1"
+                                                >
+                                                    <option value="">Select role...</option>
+                                                    {roles.map((role:any)=>(
+                                                        <option key={role.id} value={role.id}>{role.name}</option>
+                                                    ))}
+                                                </select>
+                                            )
+                                        ) : (
+                                            <span>{user.role?.name || '-'}</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                         {user.email_verified_at ? 'Yes' : 'No'}

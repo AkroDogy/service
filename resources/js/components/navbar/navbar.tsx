@@ -74,7 +74,7 @@ function Navbar() {
 
           {/* RIGHT - Butoane */}
           <div className="flex gap-3 items-center">
-            {user?.id && (user?.role === 'ADMIN' || user?.role === 'WORKER') && (
+            {user?.id && (user?.role === 'admin' || user?.role === 'worker') && (
               <Link href={route('dashboard')}>
                 <Button variant="outline" className="w-full">
                   <ShieldPlus />
@@ -88,7 +88,7 @@ function Navbar() {
                 <Link href={route('profile.edit')} prefetch onClick={cleanup}>
                   <Button variant="outline" className="w-full">
                     <UserRound />
-                    Contul meu
+                    My account
                   </Button>
                 </Link>
                 <Button onClick={handleLogout} variant="outline" className="w-full">
@@ -101,7 +101,7 @@ function Navbar() {
               <Link href="/login">
                 <Button variant="outline" className="w-full">
                   <UserRound />
-                  Autentificare
+                  Login
                 </Button>
               </Link>
             )}
@@ -121,16 +121,7 @@ function Navbar() {
                   <Menu className="size-4" />
                 </Button>
               </SheetTrigger>
-              <SheetContent className="w-full overflow-y-auto h-[35%] p-4 rounded-b-lg" side="top">
-                <SheetHeader className="hidden">
-                  <SheetTitle>
-                    <div className="flex items-center gap-2">
-                      <Link href="/">
-                        TEST
-                      </Link>
-                    </div>
-                  </SheetTitle>
-                </SheetHeader>
+              <SheetContent className="w-full overflow-y-auto h-[45%] p-4 rounded-b-lg" side="top">
 
                 <div className="flex flex-col gap-4 mt-8 mb-8">
                   <Link href={route('contact')} onClick={cleanup} className="font-semibold text-center">
@@ -143,7 +134,7 @@ function Navbar() {
                     Cars
                   </Link>
 
-                  {user?.id && (user?.role === 'ADMIN' || user?.role === 'WORKER') && (
+                  {user?.id && (user?.role === 'admin' || user?.role === 'worker') && (
                     <Link href={route('dashboard')}>
                       <Button variant="outline" className="w-full">
                         <ShieldPlus />
@@ -157,7 +148,7 @@ function Navbar() {
                       <Link href={route('profile.edit')} prefetch onClick={cleanup}>
                         <Button variant="outline" className="w-full">
                           <UserRound />
-                          Contul meu
+                          My account
                         </Button>
                       </Link>
                       <Button onClick={handleLogout} variant="outline" className="w-full">
@@ -169,7 +160,7 @@ function Navbar() {
                     <Link href="/login">
                       <Button variant="outline" className="w-full">
                         <UserRound />
-                        Autentificare
+                        Login
                       </Button>
                     </Link>
                   )}

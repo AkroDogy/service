@@ -20,7 +20,7 @@ class WorkerMiddleware
             return redirect()->route('login')->with('error', 'You must be logged in to access this area.');
         }
         $user = Auth::user();
-        if ($user->role === 'WORKER' || $user->role === 'ADMIN') {
+        if (strtoupper(optional($user->role)->name) === 'worker' || strtoupper(optional($user->role)->name) === 'admin') {
             return $next($request);
         }
         return redirect()->route('home')->with('error', 'You do not have permission to access this area.');

@@ -12,13 +12,16 @@ class Appointments extends Model
         'description',
         'status',
         'cars_id',
+        'location_id',
     ];
 
-    /**
-     * Get the car that owns the appointment.
-     */
     public function car()
     {
         return $this->belongsTo(Cars::class, 'cars_id');
+    }
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
     }
 }

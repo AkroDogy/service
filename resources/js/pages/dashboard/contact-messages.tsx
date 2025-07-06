@@ -3,6 +3,7 @@ import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
 import { usePage } from '@inertiajs/react';
 import { type SharedData } from '@/types';
+import axios from 'axios';
 
 const breadcrumbs: BreadcrumbItem[] = [
     {
@@ -28,7 +29,17 @@ export interface Messages {
 }
 
 export default function DashboardMessages() {
-    const messages = usePage<SharedData>().props.messages;
+    const { auth, messages } = usePage().props as any;
+    const userPermissions: string[] = auth?.user?.permissions || [];
+    const userRoles: string[] = (auth?.user?.roles || []).map((r: string) => r.toLowerCase());
+    const isSuperAdmin = userRoles.includes('admin') || userPermissions.includes('dashboard.administrator');
+    const hasPermission = (perm: string) => isSuperAdmin || userPermissions.includes(perm);
+    const userRole = auth?.user?.role;
+    const isAdmin = userRole === 'admin' || userPermissions.includes('dashboard.administrator');
+    const hasSetStatus = userPermissions.includes('dashboard.messages.setstatus');
+    if (!hasPermission('dashboard.messages')) {
+        return <div className="p-8 text-center text-red-500">You do not have permission to view this page.</div>;
+    }
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -50,7 +61,7 @@ export default function DashboardMessages() {
                             </tr>
                         </thead>
                         <tbody>
-                            {messages.map((message) => (
+                            {messages.map((message: any) => (
                                 <tr key={message.id} className="hover:bg-gray-50 dark:hover:bg-gray-800 transition">
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-800 dark:text-white">
                                         {message.fname} {message.lname}
@@ -59,7 +70,34 @@ export default function DashboardMessages() {
                                         {message.email}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm">
-                                        {message.status}
+                                        {isAdmin && hasSetStatus ? (
+                                            <form
+                                                onSubmit={e => {
+                                                    e.preventDefault();
+                                                    const status = e.currentTarget.status.value;
+                                                    if (window.confirm(`Mark as ${status}?`)) {
+                                                        axios.post(`/dashboard/contact-messages/${message.id}/status`, { status }).then(() => window.location.reload());
+                                                    }
+                                                }}
+                                            >
+                                                <select
+                                                    name="status"
+                                                    className="border rounded px-2 py-1"
+                                                    value={message.status}
+                                                    onChange={e => {
+                                                        const status = e.target.value;
+                                                        if (window.confirm(`Mark as ${status}?`)) {
+                                                            axios.post(`/dashboard/contact-messages/${message.id}/status`, { status }).then(() => window.location.reload());
+                                                        }
+                                                    }}
+                                                >
+                                                    <option value="PENDING">PENDING</option>
+                                                    <option value="DONE">DONE</option>
+                                                </select>
+                                            </form>
+                                        ) : (
+                                            <span className={message.status === 'DONE' ? 'text-green-600 font-semibold' : ''}>{message.status}</span>
+                                        )}
                                     </td>
                                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
                                         {message.phone}
